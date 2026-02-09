@@ -13,7 +13,7 @@ def generate_signals(functions, edge_cases, tests):
             signals.append({
                 "type": "untested_function",
                 "function": fn["name"],
-                "file": fn["file"],
+                "path": fn["path"],
                 "line": fn["line_start"]
             })
 

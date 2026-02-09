@@ -5,7 +5,7 @@ SUPPORTED_EXTENSIONS = {'.py', '.java', '.js','.ts', '.go', '.rb', '.php', '.cpp
 def discover_files(root_path: str):
     """
     Walk the file system and return all supported source files.
-    No Assumptions,no filterin gbeyond extensions.
+    No Assumptions,no filtering beyond extensions.
     """
     root  = Path(root_path)
     files = []

@@ -15,7 +15,7 @@ def extract_functions(files):
             if isinstance(node, ast.FunctionDef):
                 functions.append({
                     "name": node.name,
-                    "file": file["path"],
+                    "path": file["path"],
                     "params": [arg.arg for arg in node.args.args],
                     "line_start": node.lineno,
                     "branches": sum(isinstance(n,ast.If) for n in ast.walk(node)),

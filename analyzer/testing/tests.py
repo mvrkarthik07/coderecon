@@ -16,7 +16,7 @@ def map_tests(files):
             continue
 
         try:
-            source = open(path, "r",encdoing="utf-8",errors="ignore").read()
+            source = open(path, "r",encoding="utf-8",errors="ignore").read()
             tree= ast.parse(source)
         except Exception:
             continue
@@ -36,4 +36,4 @@ def map_tests(files):
                     "references":sorted(referenced)
                 })
                 
-
+    return tests

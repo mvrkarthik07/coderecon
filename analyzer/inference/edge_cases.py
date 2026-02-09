@@ -3,7 +3,7 @@ import ast
 def _emit(fn, inner, case, reason):
     return {
         "function": fn["name"],
-        "file": fn["file"],
+        "file": fn["path"],
         "case": case,
         "reason": reason,
         "line": getattr(inner, "lineno", None),
@@ -20,7 +20,7 @@ def detect_edge_cases(functions):
     for fn in functions:
         try:
             source = open(
-                fn["file"], "r", encoding="utf-8", errors="ignore"
+                fn["path"], "r", encoding="utf-8", errors="ignore"
             ).read()
             tree = ast.parse(source)
         except Exception:
