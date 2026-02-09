@@ -29,19 +29,31 @@ def main():
     if args.command == "analyze":
         run_analyze(args.path)
     elif args.command == "explain":
+        from llm.slice import slice_by_directory
+
         from llm.explain import slice_by_file
-        from llm.prompt import build_prompt
+        from llm.prompt import build_prompt, build_directory_prompt
         from llm.client import run_llm
         from report.writer import write_markdown
 
-        file_slice = slice_by_file(
-            ".coderecon/analysis.json",
-            args.path
-        )
+        target = Path(args.path)
 
-        prompt = build_prompt(file_slice)
-        md = run_llm(prompt)
-        out = write_markdown(args.path, md)
+        if target.is_dir():
+            dir_slice = slice_by_directory(
+                ".coderecon/analysis.json",
+                args.path
+            )
+            prompt = build_directory_prompt(dir_slice)
+            md = run_llm(prompt)
+            out = write_markdown(args.path, md)
+        else:
+            file_slice = slice_by_file(
+                ".coderecon/analysis.json",
+                args.path
+            )
+            prompt = build_prompt(file_slice)
+            md = run_llm(prompt)
+            out = write_markdown(args.path, md)
 
         print(f"✔ Report written to {out}")
 

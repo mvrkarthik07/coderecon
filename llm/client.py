@@ -10,7 +10,9 @@ def run_llm(prompt: str) -> str:
         ["ollama", "run", "llama3"],
         input=prompt,
         text=True,
-        capture_output=True
+        capture_output=True,
+        errors = "ignore",
+        encoding="utf-8",
     )
 
     if result.returncode != 0:
