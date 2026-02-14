@@ -21,6 +21,24 @@ def generate_signals(functions, edge_cases, tests):
 
     # Untested functions
     for fn in functions:
+        if fn["length"] > 100:
+            signals.append({
+                "type": "large_function",
+                "function": fn["name"],
+                "path": fn["path"],
+                "line": fn["line_start"],
+                "length": fn["length"],
+                "severity": "High"
+            })
+        elif fn["length"] > 60:
+            signals.append({
+                "type": "large_function",
+                "function": fn["name"],
+                "path": fn["path"],
+                "line": fn["line_start"],
+                "length": fn["length"],
+                "severity": "Medium"
+            })
         if fn["name"] not in tested_functions:
             signal_type = "untested_function"
             signals.append({

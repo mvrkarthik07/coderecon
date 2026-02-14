@@ -65,7 +65,17 @@ def main():
     #diff command code
     diff = subparsers.add_parser("diff", help="Compare last two scans")
 
+    #summary command code
+    summary = subparsers.add_parser("summary", help="Quick repository summary")
+    summary.add_argument("path", help="Path to analyze")
 
+    #suggest command code
+    suggest = subparsers.add_parser("suggest", help="Generate improvement suggestions")
+    suggest.add_argument("path", help="Path to analyze")
+
+    #Graphs command code
+    graphs = subparsers.add_parser("graphs", help="Generate structural graph")
+    graphs.add_argument("path", help="Path to analyze")
 
     args = parser.parse_args()
 
@@ -130,31 +140,35 @@ def main():
             if temp_repo and temp_repo.exists():
                 print("[coderecon] Cleaning up temporary repository...")
                 safe_delete(temp_repo)
+    elif args.command == "summary":
+        from report.summary import run_summary
+        analysis = run_analyze(args.path, write_to_disk=False)
+        run_summary(analysis)
+
+    elif args.command == "suggest":
+        from llm.suggest import run_suggest_logic
+        analysis = run_analyze(args.path, write_to_disk=False)
+        output = run_suggest_logic(analysis)
+        print(output)
+
+    elif args.command == "graphs":
+        from report.graph import generate_graph
+        analysis = run_analyze(args.path, write_to_disk=False)
+        generate_graph(analysis)
 
 
 # noinspection PyTypeChecker
 def run_analyze(path: str, write_to_disk: bool = True):
     analysis = run_analysis(path)
 
-    if not write_to_disk:
-        return analysis
+    if write_to_disk:
+        out = Path(".coderecon")
+        out.mkdir(exist_ok=True)
 
-    out = Path(".coderecon")
-    out.mkdir(exist_ok=True)
+        output_path = out / "analysis.json"
 
-    output_path = out / "analysis.json"
-    previous_path = out / "analysis_previous.json"
-
-    if output_path.exists():
-        if previous_path.exists():
-            previous_path.unlink()
-        output_path.rename(previous_path)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(analysis, f, indent=2)
-
-
-
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(analysis, f, indent=2)
 
     print("[coderecon] Scan complete")
     print(f"[coderecon] Files scanned: {len(analysis['files'])}")
@@ -162,7 +176,7 @@ def run_analyze(path: str, write_to_disk: bool = True):
     print(f"[coderecon] Tests detected: {len(analysis['tests'])}")
     print(f"[coderecon] Edge cases inferred: {len(analysis['edge_cases'])}")
     print(f"[coderecon] Signals generated: {len(analysis['signals'])}")
-    print(f"[coderecon] Analysis written to {output_path}")
+    print("[coderecon] Analysis written to .coderecon/analysis.json")
     return analysis
 
 def run_explain_logic(path: str, analysis_data = None) -> str:
