@@ -11,32 +11,47 @@ from report.writer import write_markdown
 
 def safe_delete(path: Path):
     def onerror(func, path_str, exc_info):
-        # Make file writable and retry
-        os.chmod(path_str, 0o700)
-        func(path_str)
+        try:
+            os.chmod(path_str, 0o777)
+            func(path_str)
+        except Exception:
+            pass
 
-    for _ in range(3):  # retry a few times
+    for _ in range(8):  # more retries
         try:
             shutil.rmtree(path, onerror=onerror)
             return
         except PermissionError:
-            time.sleep(0.5)
+            time.sleep(0.3)
 
     print("[coderecon] Warning: Could not fully clean temp directory.")
 
+
+import re
+
+GITHUB_URL_RE = re.compile(
+    r"^https://github\.com/[^/]+/[^/]+/?$"
+)
+
 def is_github_url(s: str) -> bool:
-    return s.startswith("https://github.com/")
+    return bool(GITHUB_URL_RE.match(s.strip()))
 
 def clone_repo_temp(url: str) -> Path:
     temp_dir = Path(tempfile.mkdtemp(prefix="coderecon_"))
 
     print(f"[coderecon] Cloning {url} into temporary directory...")
-    subprocess.run(
+
+    result = subprocess.run(
         ["git", "clone", "--depth", "1", url, str(temp_dir)],
-        check=True
+        capture_output=True,
+        text=True
     )
 
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+
     return temp_dir
+
 
 
 def main():
@@ -47,8 +62,7 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    analyze = subparsers.add_parser("analyze", help="Analyze a codebase")
-    analyze.add_argument("path", help="Path to codebase")
+
 
     #scan command code
     scan = subparsers.add_parser("scan", help="Scan codebase")
@@ -72,10 +86,10 @@ def main():
     #suggest command code
     suggest = subparsers.add_parser("suggest", help="Generate improvement suggestions")
     suggest.add_argument("path", help="Path to analyze")
-
-    #Graphs command code
-    graphs = subparsers.add_parser("graphs", help="Generate structural graph")
-    graphs.add_argument("path", help="Path to analyze")
+    #topo command code
+    topo = subparsers.add_parser("topology", help="Topology map + risk heatmap (all files)")
+    topo.add_argument("path", help="Local path OR GitHub repo URL")
+    topo.add_argument("--max", type=int, default=9999, help="Max files per bucket (default: show all)")
 
     args = parser.parse_args()
 
@@ -151,10 +165,31 @@ def main():
         output = run_suggest_logic(analysis)
         print(output)
 
-    elif args.command == "graphs":
-        from report.graph import generate_graph
-        analysis = run_analyze(args.path, write_to_disk=False)
-        generate_graph(analysis)
+    elif args.command == "topology":
+        from report.topology import generate_topology
+
+        temp_repo = None
+        try:
+            target_path = args.path
+
+            if is_github_url(args.path):
+                temp_repo = clone_repo_temp(args.path)
+                target_path = str(temp_repo)
+
+            analysis = run_analyze(target_path, write_to_disk=False)
+
+            text = generate_topology(
+                analysis,
+                repo_root=target_path,
+                max_files_per_bucket=args.max
+            )
+
+            print(text)
+
+        finally:
+            if temp_repo:
+                print("[coderecon] Cleaning up temporary repository...")
+                safe_delete(temp_repo)
 
 
 # noinspection PyTypeChecker
