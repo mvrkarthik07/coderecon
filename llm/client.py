@@ -1,24 +1,18 @@
-import shutil
 import subprocess
+import shutil
 
 def run_llm(prompt: str, model: str = "llama3"):
     ollama_bin = shutil.which("ollama")
-
     if not ollama_bin:
-        raise RuntimeError(
-            "Ollama not found in PATH.\n"
-            "Please install Ollama from https://ollama.com and ensure it is in your PATH.\n"
-            "Then run: ollama pull llama3"
-        )
+        raise RuntimeError("Ollama not found in PATH")
 
     result = subprocess.run(
         [ollama_bin, "run", model],
-        input=prompt,
-        capture_output=True,
-        text=True
+        input=prompt.encode("utf-8"),
+        capture_output=True
     )
 
     if result.returncode != 0:
-        raise RuntimeError(result.stderr)
+        raise RuntimeError(result.stderr.decode("utf-8", errors="ignore"))
 
-    return result.stdout
+    return result.stdout.decode("utf-8", errors="ignore")
