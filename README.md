@@ -1,5 +1,9 @@
 
 # 🔍 CodeRecon
+# 🔍 CodeRecon
+
+![CodeRecon Logo](https://raw.githubusercontent.com/mvrkarthik07/coderecon/main/assets/coderecon_logo.png)
+
 
 **Engineering-first repository reconnaissance and architectural auditing.**
 
@@ -61,6 +65,14 @@ Data Layer: Schemas, models, and database logic.
 External Integrations: API clients and LLM wrappers.
 
 Utilities: Helper modules and reporting logic.
+
+## 🔌 Architecture & Extensibility (MCP)
+
+CodeRecon is built on the **Model Context Protocol (MCP)**. While primarily a CLI tool, its internal engine functions as an MCP server.
+
+* **Standardized Context**: Uses `fastmcp` to bridge local AST analysis with LLM reasoning.
+* **Tool-Agnostic**: Because it follows the MCP standard, CodeRecon’s analysis logic can be plugged into any MCP-compliant host (like Claude Desktop or IDE agents) in the future.
+* **Local-First Protocol**: MCP ensures that the communication between the scanner and the LLM happens entirely on your machine.
 
 ### 🛡️ Privacy & Philosophy
 100% Local: Your code never leaves your machine. Analysis is performed via local AST parsing and local LLM inference.
