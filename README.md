@@ -73,5 +73,3 @@ Ephemeral: Remote clones are stored in temp directories and aggressively deleted
 
 
 ---
-
-**Next Step:** Since the package is now public, would you like me to help you set up a **GitHu
