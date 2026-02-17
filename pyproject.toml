@@ -15,6 +15,10 @@ dependencies = [
     "ollama",
     "requests"
 ]
+[project.urls]
+"Homepage" = "https://github.com/mvrkarthik07/coderecon"
+"Documentation" = "https://github.com/mvrkarthik07/coderecon/blob/main/ARCHITECTURE.md"
+"Youtube Demo" = "https://youtu.be/84yY41UJoqQ"
 
 [project.scripts]
 coderecon = "cli:main"

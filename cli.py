@@ -61,6 +61,33 @@ def clone_repo_temp(url: str) -> Path:
 # -----------------------------------------------------------------------------
 # CORE LOGIC WRAPPERS
 # -----------------------------------------------------------------------------
+def display_detailed_help():
+    """Prints a custom, formatted guide to CodeRecon commands."""
+    help_text = """
+🔍 CodeRecon Detailed Command Guide
+
+CORE ANALYSIS:
+  explain [PATH]   LLM-powered logic breakdown. Explains the 'intent' of the code.
+  topology [PATH]  Maps architecture and identifies functional 'buckets' (Core, Entry, etc.).
+  report [PATH]    Generates a formal RECON_REPORT.md with Mermaid diagrams.
+  scan [PATH]      High-speed AST structural scan (no LLM reasoning).
+
+INTELLIGENCE:
+  summary [PATH]   Provides a high-level executive summary of the repository's purpose.
+  suggest [PATH]   Analyzes the codebase for implementation gaps and architectural risks.
+
+SYSTEM & UTILS:
+  doctor           Checks system health, Ollama status, and dependency alignment.
+  clean            Wipes ephemeral clones and local cache files.
+  help             Displays this detailed guide.
+
+USAGE EXAMPLES:
+  $ coderecon explain .
+  $ coderecon suggest ./src
+  $ coderecon report https://github.com/mvrkarthik07/coderecon
+    """
+    print(help_text)
+
 
 def get_analysis_data(path: str, force_scan: bool = False) -> dict:
     """
@@ -187,7 +214,8 @@ def main():
     # Register Commands
     subparsers.add_parser("doctor")
     subparsers.add_parser("clean")
-    subparsers.add_parser("diff")
+    subparsers.add_parser("help")
+
 
     for cmd in ["scan", "explain", "report", "summary", "suggest", "topology"]:
         p = subparsers.add_parser(cmd)
@@ -200,7 +228,9 @@ def main():
     if args.command == "doctor":
         run_doctor()
         return
-
+    if args.command == "help":
+        display_detailed_help()
+        return
     if args.command == "clean":
         run_clean_logic()
         return
@@ -245,9 +275,7 @@ def main():
             from llm.suggest import run_suggest_logic
             print(run_suggest_logic(analysis))
 
-        elif args.command == "diff":
-            from analyzer.diff import run_diff_logic
-            print(run_diff_logic())
+
 
         elif args.command == "topology":
             from report.topology import generate_topology
