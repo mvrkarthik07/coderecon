@@ -1,20 +1,29 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "coderecon"
 version = "0.1.0"
+description = "Engineering-first repository reconnaissance and architectural auditing."
+readme = "README.md"
+requires-python = ">=3.10"
 dependencies = [
     "mcp",
     "fastmcp",
     "click",
-    "ollama"
+    "ollama",
+    "requests"
 ]
 
 [project.scripts]
 coderecon = "cli:main"
 
 [tool.setuptools]
-py-modules = ["cli"]  # Explicitly tell it cli.py is a module
-packages = ["analyzer", "llm", "report", "mcp","schemas"] # List your directories
+# Explicitly include the top-level scripts and directories
+py-modules = ["cli"]
+packages = ["analyzer", "llm", "report", "mcp", "schemas"]
+
+[tool.setuptools.package-data]
+# Ensure any non-python files (like templates) are included if you have them
+"*" = ["*.md", "*.json"]
