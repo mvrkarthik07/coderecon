@@ -10,7 +10,7 @@ CodeRecon is a pragmatic CLI tool designed to bridge the gap between documentati
 
 ---
 
-**[Architecture Guide](./ARCHITECTURE.md)** – Deep dive into the system design and AST parsing logic.
+**[Architecture Guide](https://github.com/mvrkarthik07/coderecon/blob/main/ARCHITECTURE.md)** – Deep dive into the system design and AST parsing logic.
 
 
 
