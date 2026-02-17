@@ -1,0 +1,15 @@
+# Include essential metadata
+include README.md
+include LICENSE
+
+# Explicitly exclude documentation and heavy assets from the pip package
+exclude architecture.md
+recursive-exclude assets *
+
+# Exclude local cache and development artifacts
+exclude analysis.json
+recursive-exclude tests *
+recursive-exclude .github *
+
+# Exclude compiled python files
+global-exclude *.py[cod] __pycache__ *.so
