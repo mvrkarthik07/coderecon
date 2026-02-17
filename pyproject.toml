@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coderecon"
+version = "0.1.0"
+dependencies = [
+    "mcp",
+    "fastmcp",
+    "click",
+    "ollama"
+]
+
+[project.scripts]
+coderecon = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli"]  # Explicitly tell it cli.py is a module
+packages = ["analyzer", "llm", "report", "mcp","schemas"] # List your directories

@@ -1,106 +1,110 @@
 def build_prompt(file_slice: dict) -> str:
-    has_signals = file_slice["signal_count"] > 0
+    """
+    File-level reasoning: Focus on code-level hazards and specific Rule IDs.
+    """
+    has_signals = file_slice.get("signal_count", 0) > 0
 
     return f"""
-You are a senior software engineer performing a static analysis review.
+[CODERECON: FILE-LEVEL DIAGNOSTIC]
+TARGET: {file_slice.get("path")}
+SIGNALS: {file_slice.get("signal_count")}
 
-You are given aggregated analysis signals for ONE file.
+### TASK
+Analyze the deterministic signals for this file. Rank them by risk.
+- **Evidence-Based**: Every risk identified MUST be attributed to a specific Rule ID (e.g., [CR1001]).
+- **Fix**: Provide a concrete refactor strategy or code snippet suggestion.
 
-File: {file_slice["path"]}
-Total signals: {file_slice["signal_count"]}
+### SIGNALS
+{file_slice.get("signals")}
 
-Task:
-{"- Rank issues by severity (High/Medium/Low) with a brief rationale." if has_signals else "- Clearly state that no issues were detected and explan why this file appears clean."}
-For each issue:
-- explain what it means
-- why it matters
-- what could go wrong if ignored
-- suggest a concrete fix or refactor
-
-Do NOT invent issues.
-Do NOT reference data outside this input.
-
-Signals:
-{file_slice["signals"]}
-
-Produce a clean Markdown report with:
-- Summary
-- Issues (grouped logically)
-- Recommendations
+### OUTPUT
+1. **Summary**: What is this file's primary risk?
+2. **Hazard Analysis**: Grouped by Rule ID. Reference line numbers from the data.
+3. **Refactor Suggestion**: One clear path to clean this specific file.
 """
+
+
 def build_directory_prompt(dir_slice: dict) -> str:
+    """
+    Directory-level reasoning: Focus on grouping and cross-file patterns.
+    """
     return f"""
-You are reviewing deterministic static analysis results.
+[CODERECON: DIRECTORY-LEVEL AUDIT]
+LOCATION: {dir_slice.get('directory')}
+METRICS: {dir_slice.get('file_count')} files | {dir_slice.get('signal_count')} total signals.
 
-STRICT RULES:
-- Use ONLY the provided signals.
-- DO NOT invent additional issues.
-- DO NOT estimate counts.
-- DO NOT assume complexity metrics.
-- DO NOT mention tools or concepts not present in signals.
-- If signals are limited, say so clearly.
+### TASK
+Identify the 'Theme of Failure' in this directory. 
+- **Pattern Recognition**: Identify recurring Rule IDs (e.g., [CR2001]) across multiple files.
+- **Prioritization**: Which file in this directory represents the highest architectural risk?
 
-Directory: {dir_slice['directory']}
-Files affected: {dir_slice['file_count']}
-Total signals: {dir_slice['signal_count']}
-Severity breakdown: {dir_slice['severity_counts']}
+### DATA
+{dir_slice.get('signals')}
 
-Signals:
-{dir_slice['signals']}
-
-Your task:
-
-1. Summarize the issues strictly based on signals.
-2. Group issues by type.
-3. Mention specific files and functions.
-4. Provide concrete remediation suggestions tied to each signal type.
-5. If signals are weak or repetitive, say so.
-
-Be technical, precise, and grounded.
-
+### OUTPUT
+1. **Directory Posture**: Overall health assessment of this module.
+2. **Recurring Anti-Patterns**: Identify clusters of signals by Rule ID.
+3. **Action Plan**: Prioritized list of files to address.
 """
-def build_system_prompt(slice_data: dict) -> str:
+
+
+def build_system_prompt(slice_str: str) -> str:
+    """
+        Optimized for zero-fluff and rapid token generation.
+        """
     return f"""
-You are a principal-level software architect conducting a full repository design and risk review.
+    [CODERECON: ARCHITECTURAL RECONNAISSANCE]
+    ROLE: Cold, pragmatic Lead Architect. [cite: 2026-02-17]
+    TONE: Direct, technical, no-bullshit. 
 
-STRICT RULES:
-- Use ONLY the provided structured data.
-- Do NOT assume technologies or frameworks not visible in structure.
-- Do NOT invent metrics.
-- Base all conclusions strictly on counts and signals.
-- If signals are weak, state that clearly.
+    ### RAW ARCHITECTURAL DATA
+    {slice_str}
+    ### EMERGENCY PROTOCOL
+- IF DATA IS "DATA_NULL" OR EMPTY: Output ONLY: "RECON_REFUSED: No logic detected in target path." and stop. Do not generate headers.
+...
+    
+    ### CONSTRAINTS
+    - **Reference Only**: Use ONLY the Rule IDs and files listed above.
+    - **Brevity**: Do not use introductory sentences like "Based on the data provided..." 
+    - **Mermaid**: Keep the 'graph TD' simple; focus on module relationships, not every single function.
 
-REPOSITORY SUMMARY:
-Total files: {slice_data.get("total_files")}
-Total functions: {slice_data.get("total_functions")}
-Total tests: {slice_data.get("total_tests")}
-Test ratio (tests/functions): {slice_data.get("test_ratio")}
-Top-level structure: {slice_data.get("top_level_structure")}
+    ### MANDATE
+    1. **Flow**: 'graph TD' block of the logic flow.
+    2. **Hazards**: Cite Rule IDs (e.g., [CR1001]) for every finding.
+    3. **No Hallucinations**: If data is missing, say "Insufficient data for [Area]".
 
-RISK SUMMARY:
-Total signals: {slice_data.get("total_signals")}
-Severity distribution: {slice_data.get("severity_counts", {})}
+    ### REQUIRED OUTPUT (STRICT)
+    ## System Risk Overview
+    (2-3 sentences max)
 
-SAMPLE SIGNALS:
-{slice_data.get("signals")}
+    ## Architectural Hotspots (Mermaid)
+    (The graph)
 
-YOUR TASK:
+    ## Pattern Analysis
+    (Bullet points with Rule IDs)
 
-1. Assess overall system risk posture.
-2. Identify architectural hotspots based on signal concentration.
-3. Detect recurring structural patterns or anti-patterns.
-4. Evaluate testing posture using the test ratio.
-5. Rank top 5 highest-leverage fixes.
-6. Suggest system-level structural improvements.
+    ## Top 5 Strategic Fixes
+    (Ordered by severity)
+    """
 
-OUTPUT FORMAT:
+def build_github_recon_prompt(slice_str: str, readme_content: str) -> str:
+    return f"""
+[CODERECON: TRADEMARK RECON]
+Analyze this repository and provide a high-clarity summary.
 
-## System Risk Overview
-## Architectural Hotspots
-## Recurring Patterns
-## Testing Posture Analysis
-## Top 5 Priority Fixes
-## Structural Recommendations
+### 📖 README CONTEXT
+{readme_content}
 
-Be technical, precise, and evidence-driven.
+### 🏗️ CODE STRUCTURE
+{slice_str}
+
+### MANDATE
+1. What is this project? Summarize its core purpose.
+2. How is it built? Identify the main tech and entry points.
+3. Intent vs Reality: Does the code match the README claims?
+
+### OUTPUT FORMAT
+## 🚀 Project Identity & Intent
+## 🏗️ Architectural Flow
+## ⚠️ Implementation Gap
 """

@@ -1,49 +1,46 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
-SUPPORTED_EXTENSIONS = {'.py', '.java', '.js','.ts', '.go', '.rb', '.php', '.cpp', '.c', '.cs', '.swift', '.kt', '.rs', '.m', '.scala', '.pl', '.sh', '.html', '.css', '.xml', '.json', '.yml', '.yaml', '.jsx', '.tsx'}
-EXCLUDE_DIRS = {
-    ".venv",
-    "venv",
-    "__pycache__",
-    ".git",
-    "node_modules",
-    "dist",
-    "build"
-}
+# Move these to a set for O(1) lookup speed
+SUPPORTED_EXTENSIONS = {".py", ".js", ".ts", ".tsx", ".rs", ".go", ".java", ".cpp", ".c", ".h"}
+EXCLUDE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "dist", "build", ".coderecon", "venv", "lib"}
+
+
+def _get_file_metadata(full_path, filename):
+    """Fast metadata assembly using pre-calculated values."""
+    return {
+        "path": full_path,
+        "name": filename,
+        "size": os.path.getsize(full_path)  # Only hit the disk if necessary
+    }
 
 
 def discover_files(root_path: str):
     """
-    Walk the file system and return all supported source files.
-    No Assumptions,no filtering beyond extensions.
+    High-speed discovery using os.scandir to minimize system calls.
     """
-    root = Path(root_path)
+    # 1. Handle Single File Input Fast
+    if os.path.isfile(root_path):
+        if os.path.splitext(root_path)[1].lower() in SUPPORTED_EXTENSIONS:
+            return [_get_file_metadata(root_path, os.path.basename(root_path))]
+        return []
+
     files = []
+    stack = [root_path]
 
-    if not root.exists():
-        return files
-
-    for current_root, dirs, filenames in os.walk(root):
-
-        # 🔥 Prevent descending into excluded directories
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-
-        for filename in filenames:
-            path = Path(current_root) / filename
-
-            if path.suffix.lower() in SUPPORTED_EXTENSIONS:
-                try:
-                    loc = sum(1 for _ in path.open("r", encoding="utf-8", errors="ignore"))
-                except Exception:
-                    loc = 0
-
-                files.append({
-                    "path": str(path),
-                    "extension": path.suffix,
-                    "loc": loc
-                })
+    # 2. Manual Stack Walk (often faster than os.walk for deep trees)
+    while stack:
+        current_dir = stack.pop()
+        try:
+            with os.scandir(current_dir) as it:
+                for entry in it:
+                    if entry.is_dir():
+                        if entry.name not in EXCLUDE_DIRS:
+                            stack.append(entry.path)
+                    elif entry.is_file():
+                        if os.path.splitext(entry.name)[1].lower() in SUPPORTED_EXTENSIONS:
+                            files.append(_get_file_metadata(entry.path, entry.name))
+        except PermissionError:
+            continue
 
     return files
-
-
