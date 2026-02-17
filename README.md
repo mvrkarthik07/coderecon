@@ -1,6 +1,5 @@
 
 # 🔍 CodeRecon
-# 🔍 CodeRecon
 
 ![CodeRecon Logo](https://raw.githubusercontent.com/mvrkarthik07/coderecon/main/assets/coderecon_logo.png)
 
