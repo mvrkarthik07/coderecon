@@ -12,8 +12,12 @@ CodeRecon is a pragmatic CLI tool designed to bridge the gap between documentati
 
 **[Architecture Guide](./ARCHITECTURE.md)** – Deep dive into the system design and AST parsing logic.
 
-**[CodeRecon Demo](https://img.youtube.com/vi/84yY41UJoqQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=84yY41UJoqQ)**
-*Click the image above to watch the walkthrough of CodeRecon in action.*
+
+
+[![CodeRecon Demo](https://img.youtube.com/vi/84yY41UJoqQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=84yY41UJoqQ)
+
+*Watch the engineering-first reconnaissance workflow in action.*
+
 ## 🚀 Installation
 
 ### 1. From PyPI
